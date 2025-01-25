@@ -55,3 +55,5 @@ plt.show()
 # Vorhersage anzeigen
 print(f"Tatsächliche Kurse: {y_test.values}")
 print(f"Vorhergesagte Kurse: {y_vorhersage}")
+
+# test
