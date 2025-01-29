@@ -9,7 +9,7 @@ from tensorflow.keras.layers import Dense, LSTM
 # SCHRITT 1: BITCOIN-DATEN LADEN
 # ================================
 # Wir holen uns die Bitcoin-Daten der letzten 8 Jahre
-daten = yf.download('BTC-USD', start='2014-09-17', end='2025-01-12')  # Bitcoin-Daten
+daten = yf.download('BTC-USD', start='2014-09-17', end='2025-01-28')  # Bitcoin-Daten
 
 # MultiIndex der Spalten entfernen (nur die erste Ebene behalten)
 daten.columns = daten.columns.get_level_values(0)  # Entferne die Ticker-Ebene (z. B. 'BTC-USD')
