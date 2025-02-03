@@ -1,12 +1,11 @@
 """
 Bitcoin Trading Environment mit Vergleich: Trading vs. Buy and Hold (logarithmische Darstellung)
 
-Dieses Skript beinhaltet:
-- Definition eines Bitcoin-Trading-Environments basierend auf historischen Daten von yfinance.
-- Simulation einer Episode mit zufälligen Aktionen.
-- Berechnung des Buy-and-Hold-Verlaufs (d.h. wenn man ab Episodenstart investiert und bis zum Ende hält).
-- Darstellung eines logarithmischen Charts, in dem der Portfolio-Verlauf der Trading-Strategie
-  und der Buy-and-Hold-Strategie verglichen werden.
+Hier startet der Portfolio-Multiplikator bei 1, sodass du siehst, um wieviel sich dein Portfolio (als Multiplikator)
+verändert hat. Beispiel: 1.2 entspricht +20% Gewinn, 0.8 entspricht -20% Verlust.
+
+Die Methode `plot_comparison_log()` zeigt den Verlauf des simulierten Trading-Portfolios sowie den Buy-and-Hold-Verlauf
+(in dem man ab Episodenstart investiert und bis zum Ende hält) in einem Chart mit logarithmischer y-Achse.
 """
 
 # Imports und Setup
@@ -33,17 +32,17 @@ class BitcoinTradingEnv(gym.Env):
     Beobachtungen (als Dictionary):
       - 'window': Fenster der letzten 'window_size' Tage der skalierten Daten (Close, High, Low, Open, Volume)
       - 'position': 0 (nicht investiert) oder 1 (investiert)
-      - 'portfolio': Normalisierter Portfolio-Wert (bezogen auf das initiale Kapital)
+      - 'portfolio': Der Portfolio-Multiplikator (Start bei 1)
     """
     
     metadata = {'render.modes': ['human']}
     
-    def __init__(self, window_size=30, initial_capital=10000, 
+    def __init__(self, window_size=30, initial_capital=1.0, 
                  start_date='2014-09-17', end_date='2025-01-28'):
         super(BitcoinTradingEnv, self).__init__()
         
         self.window_size = window_size
-        self.initial_capital = initial_capital
+        self.initial_capital = initial_capital  # Portfolio startet bei 1
         
         # Bitcoin-Daten laden
         self.df = yf.download('BTC-USD', start=start_date, end=end_date)
@@ -57,7 +56,7 @@ class BitcoinTradingEnv(gym.Env):
         self.scaler = MinMaxScaler(feature_range=(0, 1))
         self.scaled_features = self.scaler.fit_transform(self.data.values)
         
-        # Speichere die rohen Schlusskurse zur Berechnung des Portfolio-Werts
+        # Speichere die rohen Schlusskurse zur Berechnung des Portfolio-Multiplikators
         self.close_prices = self.df['Close'].values
         
         # Definiere den Aktionsraum: 0 (Halten), 1 (Kaufen), 2 (Verkaufen)
@@ -77,7 +76,7 @@ class BitcoinTradingEnv(gym.Env):
         Setzt das Environment zurück und startet eine neue Episode.
         """
         self.current_step = self.window_size  # Start, wenn ein vollständiges Fenster verfügbar ist
-        self.portfolio = self.initial_capital
+        self.portfolio = self.initial_capital  # Startwert = 1
         self.position = 0  # 0: nicht investiert, 1: investiert
         self.buy_price = None  # Speichert den Kaufpreis, falls investiert
         self.portfolio_history = [self.portfolio]  # Aufzeichnung des Portfolio-Verlaufs
@@ -90,7 +89,7 @@ class BitcoinTradingEnv(gym.Env):
         obs = {
             'window': self.scaled_features[self.current_step - self.window_size : self.current_step].astype(np.float32),
             'position': self.position,
-            'portfolio': np.array([self.portfolio / self.initial_capital], dtype=np.float32)
+            'portfolio': np.array([self.portfolio], dtype=np.float32)
         }
         return obs
     
@@ -103,7 +102,7 @@ class BitcoinTradingEnv(gym.Env):
 
         Rückgabe:
           - observation: aktuelle Beobachtung (Dictionary)
-          - reward: Belohnung (Veränderung des Portfolio-Werts plus Strafpunkte bei ungültigen Aktionen)
+          - reward: Belohnung (Veränderung des Portfolio-Multiplikators plus Strafpunkte bei ungültigen Aktionen)
           - done: Bool, ob die Episode beendet ist
           - info: zusätzliches Info-Dictionary (hier leer)
         """
@@ -143,7 +142,7 @@ class BitcoinTradingEnv(gym.Env):
         else:
             raise ValueError("Ungültige Aktion. Erlaubt sind 0 (Halten), 1 (Kaufen) oder 2 (Verkaufen).")
         
-        # Belohnung entspricht der Änderung des Portfolio-Werts
+        # Belohnung entspricht der Änderung des Portfolio-Multiplikators
         reward += self.portfolio - prev_portfolio
         
         # Aktualisiere den Zeitschritt und speichere den Portfolio-Wert
@@ -161,19 +160,19 @@ class BitcoinTradingEnv(gym.Env):
         """
         status = "Investiert" if self.position == 1 else "Nicht investiert"
         current_price = self.close_prices[self.current_step]
-        print(f"Schritt: {self.current_step} | Portfolio: {self.portfolio:.2f} | Position: {status} | Preis: {current_price:.2f}")
+        print(f"Schritt: {self.current_step} | Portfolio: {self.portfolio:.4f} | Position: {status} | Preis: {current_price:.2f}")
     
     def plot_comparison_log(self):
         """
         Plottet den Verlauf des simulierten Trading-Portfolios und vergleicht diesen
-        mit dem Buy-and-Hold-Portfolio (d.h. wenn man ab Episodenstart investiert und bis zum Ende hält)
-        in einem logarithmischen Chart.
+        mit dem Buy-and-Hold-Verlauf (d.h. wenn man ab Episodenstart investiert und bis zum Ende hält)
+        in einem Chart mit logarithmischer y-Achse.
         """
         # Zeitpunkt des Episodenstarts (nach dem initialen Fenster)
         initial_index = self.window_size  
         initial_price = self.close_prices[initial_index]
         
-        # Berechne für jeden Zeitschritt den Buy-and-Hold-Wert:
+        # Berechne für jeden Zeitschritt den Buy-and-Hold-Multiplikator:
         buy_and_hold = [
             self.initial_capital * (self.close_prices[initial_index + i] / initial_price)
             for i in range(len(self.portfolio_history))
@@ -183,7 +182,7 @@ class BitcoinTradingEnv(gym.Env):
         plt.plot(self.portfolio_history, label="Simuliertes Trading Portfolio")
         plt.plot(buy_and_hold, label="Buy and Hold Portfolio", linestyle="--")
         plt.xlabel("Schritte")
-        plt.ylabel("Portfolio-Wert")
+        plt.ylabel("Portfolio Multiplikator")
         plt.title("Vergleich: Trading vs. Buy and Hold (logarithmische Skala)")
         plt.yscale("log")
         plt.grid(True, which="both", ls="--")
