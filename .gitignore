@@ -2,3 +2,5 @@
 /old stuff
 /Gym Setup/rl_env
 /trading_env
+/Agents/PPO/ppo_trading_model.zip
+/Agents/DQN/dqn_trading_model.zip
