@@ -13,11 +13,6 @@ sys.path.append(project_root)
 
 print("Updated Python path:", sys.path)  # Debugging check
 
-
-# In[39]:
-
-
-
 # In[27]:
 
 
@@ -213,7 +208,7 @@ model = DQN(
 )
 
 
-# In[36]:
+# In[ ]:
 
 
 # -------------------------------
@@ -225,7 +220,7 @@ model.learn(
 )
 
 # Speichere das trainierte Modell
-model.save("dqn_trading_model")
+model.save("model_without_buffer", exclude=["replay_buffer"])
 
 
 # In[37]:
@@ -331,7 +326,7 @@ plt.grid(axis='y')
 plt.show()
 
 
-# In[ ]:
+# In[40]:
 
 
 import numpy as np
