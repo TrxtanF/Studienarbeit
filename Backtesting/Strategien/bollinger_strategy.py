@@ -26,12 +26,13 @@ df['lower_band'] = df['sma'] - 2 * df['std']
 df['signal'] = 0
 df.loc[df['close'] < df['lower_band'], 'signal'] = 1   # Buy
 df.loc[df['close'] > df['upper_band'], 'signal'] = -1  # Sell
-df['position'] = df['signal'].replace(to_replace=0, method='ffill')
+df['position'] = df['signal'].replace(to_replace=0, value=np.nan).ffill()
 
 # === Strategieertrag berechnen ===
 df['returns'] = df['close'].pct_change()
 df['strategy_returns'] = df['returns'] * df['position'].shift(1)
 df['portfolio'] = INITIAL_CAPITAL * (1 + df['strategy_returns']).cumprod()
+df['portfolio'] = df['portfolio'].bfill()
 
 # === Performance-Metriken ===
 final_value = df['portfolio'].iloc[-1]

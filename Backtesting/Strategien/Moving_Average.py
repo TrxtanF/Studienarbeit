@@ -40,6 +40,8 @@ df['returns'] = df['close'].pct_change()
 df['strategy_returns'] = df['returns'] * df['signal'].shift(1)
 df['cumulative_returns'] = (1 + df['strategy_returns']).cumprod()
 df['portfolio_value'] = INITIAL_CAPITAL * df['cumulative_returns']
+df['portfolio_value'] = df['portfolio_value'].bfill()
+
 
 # === Performance-Metriken ===
 final_value = df['portfolio_value'].iloc[-1]

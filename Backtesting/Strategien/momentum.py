@@ -24,12 +24,13 @@ df['momentum'] = df['close'].pct_change(periods=MOM_WINDOW)
 df['signal'] = 0
 df.loc[df['momentum'] > 0, 'signal'] = 1
 df.loc[df['momentum'] < 0, 'signal'] = -1
-df['position'] = df['signal'].replace(to_replace=0, method='ffill')
+df['position'] = df['signal'].replace(to_replace=0, value=np.nan).ffill()
 
 # === Strategieertrag berechnen ===
 df['returns'] = df['close'].pct_change()
 df['strategy_returns'] = df['returns'] * df['position'].shift(1)
 df['portfolio'] = INITIAL_CAPITAL * (1 + df['strategy_returns']).cumprod()
+df['portfolio'] = df['portfolio'].bfill()
 
 # === Performance-Metriken ===
 final_value = df['portfolio'].iloc[-1]

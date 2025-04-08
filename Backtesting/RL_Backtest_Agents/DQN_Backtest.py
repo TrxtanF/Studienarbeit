@@ -47,7 +47,7 @@ def run_dqn_backtest():
 
     test_data_path = os.path.join(BASE_DIR, '..', '..', 'Transform_data', 'stand_data', '2025-2024_stand_data.csv')
     scaler_path = os.path.join(BASE_DIR, '..', '..', 'Transform_data', 'scaler.pkl')
-    model_path = os.path.join(BASE_DIR, '..', '..', 'Agents', 'DQN', 'model_without_buffer')
+    model_path = os.path.join(BASE_DIR, '..', '..', 'Agents', 'DQN', 'dqn_trading_model_')
 
     # === Daten laden ===
     test_data = pd.read_csv(test_data_path)
