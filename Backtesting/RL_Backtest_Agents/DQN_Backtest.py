@@ -17,42 +17,57 @@ print("Updated Python path:", sys.path)  # Debugging check
 
 
 # In[ ]:
-
-
-from stable_baselines3 import DQN
-import torch
-import random
-from Environment.environment import TradingEnv
+import os
 import pandas as pd
 import numpy as np
-import os
 import matplotlib.pyplot as plt
+import random
+import torch
+from stable_baselines3 import DQN
+from collections import Counter
+from Environment.environment import TradingEnv
+
 
 def run_dqn_backtest():
-    # === Vorbereitung ===
+    
+    # === Setup ===
     SEED = 42
-
-    # Python
     random.seed(SEED)
-    # Numpy
     np.random.seed(SEED)
-    # Torch
     torch.manual_seed(SEED)
     torch.use_deterministic_algorithms(True)
-    # Optional: CUDA (falls GPU verwendet wird)
     torch.backends.cudnn.deterministic = True
     torch.backends.cudnn.benchmark = False
 
-    # === Testdaten laden ===
-    BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+    # === Pfade dynamisch bestimmen ===
+    try:
+        BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+    except NameError:
+        BASE_DIR = os.getcwd()
+
     test_data_path = os.path.join(BASE_DIR, '..', '..', 'Transform_data', 'stand_data', '2025-2024_stand_data.csv')
     scaler_path = os.path.join(BASE_DIR, '..', '..', 'Transform_data', 'scaler.pkl')
+    model_path = os.path.join(BASE_DIR, '..', '..', 'Agents', 'DQN', 'model_without_buffer')
 
-
+    # === Daten laden ===
     test_data = pd.read_csv(test_data_path)
-    test_data.drop('datetime', axis=1, inplace=True)
 
-    # === Environment erstellen ===
+    if 'date' in test_data.columns:
+        test_data['date'] = pd.to_datetime(test_data['date'], errors='coerce')
+        test_data.set_index('date', inplace=True)
+    elif 'datetime' in test_data.columns:
+        test_data['datetime'] = pd.to_datetime(test_data['datetime'], errors='coerce')  # << fix hier!
+        test_data.set_index('datetime', inplace=True)
+    else:
+        raise ValueError("Keine gültige Zeitspalte ('date' oder 'datetime') in test_data gefunden.")
+
+    test_data.dropna(inplace=True)
+
+
+    # Speichere den Index separat
+    full_index = test_data.index
+
+    # === Environment vorbereiten ===
     test_env = TradingEnv(
         data=test_data,
         initial_cash=10_000,
@@ -62,49 +77,47 @@ def run_dqn_backtest():
     )
 
     # === Modell laden ===
-    model_path = os.path.join(BASE_DIR, '../../Agents/DQN/model_without_buffer')
     model = DQN.load(model_path)
 
     # === Episode ausführen ===
     reset_result = test_env.reset(seed=SEED)
-    if isinstance(reset_result, tuple):
-        obs, info = reset_result
-    else:
-        obs = reset_result
+    obs = reset_result[0] if isinstance(reset_result, tuple) else reset_result
     done = False
-
     action_list = []
 
     while not done:
-        action, _states = model.predict(obs, deterministic=True)
-        action = int(action)  # Wichtig!
+        action, _ = model.predict(obs, deterministic=True)
+        action = int(action)
         step_result = test_env.step(action)
-        if len(step_result) == 5:
-            obs, reward, done, truncated, info = step_result
-        else:
-            obs, reward, done, info = step_result
+        obs = step_result[0] if isinstance(step_result, tuple) else step_result
+        done = step_result[2] if isinstance(step_result, tuple) and len(step_result) >= 3 else False
         action_list.append(action)
 
-    # === Ergebnisse anzeigen ===
-    test_env.render(mode='human')
-    print("Aktionen des Agenten:", action_list)
+    # === Portfolio mit Zeitindex erstellen ===
+    portfolio_values = test_env.portfolio_value_history
+    portfolio_index = full_index[-len(portfolio_values):]
+    portfolio_series = pd.Series(portfolio_values, index=portfolio_index)
 
-    from collections import Counter
+    # === Action-Verteilung plotten ===
     action_counts = Counter(action_list)
-    actions = list(range(9))
-    counts = [action_counts.get(action, 0) for action in actions]
+    actions = list(range(max(action_list) + 1))
+    counts = [action_counts.get(a, 0) for a in actions]
 
     plt.figure(figsize=(8, 5))
     plt.bar(actions, counts, tick_label=actions)
     plt.xlabel("Action")
     plt.ylabel("Frequency")
-    plt.title("Agent Action Distribution")
+    plt.title("DQN Agent Action Distribution")
     plt.grid(axis='y')
+    plt.tight_layout()
     plt.show()
 
     return {
-        "portfolio": pd.Series(test_env.portfolio_value_history)
+        "portfolio": portfolio_series,
+        "actions": action_list
     }
+
+
 
 
 
