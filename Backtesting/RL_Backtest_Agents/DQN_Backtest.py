@@ -15,21 +15,21 @@ print("Updated Python path:", sys.path)  # Debugging check
 
 
 
-
 # In[ ]:
-import os
+
+
+from stable_baselines3 import DQN
+import torch
+import random
+from Environment.environment import TradingEnv
 import pandas as pd
 import numpy as np
-import matplotlib.pyplot as plt
-import random
-import torch
-from stable_baselines3 import DQN
+import os
 from collections import Counter
-from Environment.environment import TradingEnv
-
+import matplotlib.pyplot as plt
 
 def run_dqn_backtest():
-    
+
     # === Setup ===
     SEED = 42
     random.seed(SEED)
@@ -47,7 +47,7 @@ def run_dqn_backtest():
 
     test_data_path = os.path.join(BASE_DIR, '..', '..', 'Transform_data', 'stand_data', '2025-2024_stand_data.csv')
     scaler_path = os.path.join(BASE_DIR, '..', '..', 'Transform_data', 'scaler.pkl')
-    model_path = os.path.join(BASE_DIR, '..', '..', 'Agents', 'DQN', 'dqn_trading_model_')
+    model_path = os.path.join(BASE_DIR, '..', '..', 'Agents', 'DQN', '!!!dqn_trading_model_1euro')
 
     # === Daten laden ===
     test_data = pd.read_csv(test_data_path)
@@ -56,7 +56,7 @@ def run_dqn_backtest():
         test_data['date'] = pd.to_datetime(test_data['date'], errors='coerce')
         test_data.set_index('date', inplace=True)
     elif 'datetime' in test_data.columns:
-        test_data['datetime'] = pd.to_datetime(test_data['datetime'], errors='coerce')  # << fix hier!
+        test_data['datetime'] = pd.to_datetime(test_data['datetime'], errors='coerce')  
         test_data.set_index('datetime', inplace=True)
     else:
         raise ValueError("Keine gültige Zeitspalte ('date' oder 'datetime') in test_data gefunden.")
@@ -70,7 +70,7 @@ def run_dqn_backtest():
     # === Environment vorbereiten ===
     test_env = TradingEnv(
         data=test_data,
-        initial_cash=10_000,
+        initial_cash=1,
         window_size=336,
         scaler_path=scaler_path,
         default_seed=SEED
@@ -120,8 +120,14 @@ def run_dqn_backtest():
 
 
 
+# In[17]:
 
-# In[4]:
+
+dqn_result = run_dqn_backtest()
+print(dqn_result["portfolio"].index[:5])
+
+
+# In[ ]:
 
 
 import numpy as np
@@ -222,8 +228,6 @@ def compute_backtest_metrics(portfolio_values, risk_free_rate=0.0, periods_per_y
         "loss_rate": loss_rate
     }
 
-# Example usage with your environment's portfolio history:
-# Assuming you have a TradingEnv instance named 'test_env' that has completed an episode:
 result = run_dqn_backtest()
 portfolio = result["portfolio"]
 metrics = compute_backtest_metrics(portfolio)
@@ -231,4 +235,11 @@ metrics = compute_backtest_metrics(portfolio)
 # Anzeigen
 for key, value in metrics.items():
     print(f"{key}: {value:.4f}")
+
+
+
+# In[ ]:
+
+
+
 

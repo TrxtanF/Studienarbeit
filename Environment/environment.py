@@ -11,7 +11,6 @@ import joblib
 import random
 from typing import Optional, Tuple, List
 
-
 # In[18]:
 
 
@@ -128,7 +127,7 @@ def reset(self, seed: Optional[int] = None, options: Optional[dict] = None) -> T
 TradingEnv.reset = reset
 
 
-# In[21]:
+# In[ ]:
 
 
 def step(self, action: int) -> Tuple[np.ndarray, float, bool, bool, dict]:
@@ -173,7 +172,11 @@ def step(self, action: int) -> Tuple[np.ndarray, float, bool, bool, dict]:
     done = self._check_done()
 
     truncated = False  # Kann später angepasst werden, falls weitere Abbruchgründe definiert werden
-    return obs, reward, done, truncated, {}
+    info = {
+        "portfolio_value": self.portfolio_value
+    }
+
+    return obs, reward, done, truncated, info
 
 TradingEnv.step = step
 
@@ -238,37 +241,33 @@ def _check_done(self) -> bool:
 TradingEnv._check_done = _check_done
 
 
-# In[24]:
+# In[ ]:
 
 
 def _calculate_reward(self) -> float:
-
     if len(self.portfolio_value_history) < 2:
-        return 0  # Kein Risiko, keine Belohnung in den ersten Schritten
+        return 0
 
-    # 1️⃣ Direkte Belohnung: Hat sich das Portfolio nach der Aktion verbessert?
     previous_value = self.portfolio_value_history[-2] if len(self.portfolio_value_history) > 1 else self.portfolio_value
     current_value = self.portfolio_value
-    immediate_reward = (current_value - previous_value) / previous_value  # Relative Veränderung
 
-    # **Normalisierung:** Typische Werte ±5 % pro Schritt
-    immediate_reward = np.clip(immediate_reward, -0.05, 0.05) / 0.05  
+    # 1️⃣ Kurzfristige Veränderung
+    immediate_reward = (current_value - previous_value) / previous_value
+    immediate_reward = np.clip(immediate_reward, -0.05, 0.05) / 0.05
 
-    # 2️⃣ Benchmark: Wie gut wäre "Buy-and-Hold" gewesen?
+    # 2️⃣ Vergleich mit Buy-and-Hold
     if self.invested_value > 0:
         standardized_return = self.data.loc[self.current_step, 'return_1h']
         real_return = self._denormalize_return(standardized_return)
         buy_and_hold_value = self.invested_value * (1.0 + real_return) + self.cash
     else:
-        buy_and_hold_value = self.portfolio_value  
+        buy_and_hold_value = self.portfolio_value
 
     strategy_improvement = (current_value - buy_and_hold_value) / buy_and_hold_value
+    strategy_improvement = np.clip(strategy_improvement, -0.05, 0.05) / 0.05
 
-    # **Normalisierung:** Typische Werte ±5 % pro Schritt
-    strategy_improvement = np.clip(strategy_improvement, -0.05, 0.05) / 0.05  
-
-    # 3️⃣ Finale Berechnung des Rewards mit Gewichtung (Sharpe Ratio entfernt!)
-    reward = (0.2 * immediate_reward) + (0.8 * strategy_improvement)
+    # 3️⃣ Finale Berechnung des Rewards
+    reward = (0.5 * immediate_reward) + (0.5 * strategy_improvement)
 
     return reward
 

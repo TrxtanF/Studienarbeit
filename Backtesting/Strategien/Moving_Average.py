@@ -10,7 +10,7 @@ CSV_PATH = os.path.join(BASE_DIR, "..", "..", "Transform_data", "raw_data", "202
 
 SHORT_WINDOW = 24    # 24 Stunden MA
 LONG_WINDOW = 96     # 96 Stunden MA
-INITIAL_CAPITAL = 10_000
+INITIAL_CAPITAL = 1
 DATE_FORMAT = "%d.%m.%Y %H:%M"
 
 # === CSV laden ===
