@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-# In[10]:
+# In[1]:
 
 
 import os
@@ -17,12 +17,19 @@ print("Updated Python path:", sys.path)  # Debugging check
 # In[ ]:
 
 
-OUTPUT_NAME = "PPO_Backtest_v1"
+VERSION = 1
+OUTPUT_NAME = f"PPO_Backtest_v{VERSION}"
+
+MODEL_PATH = 'Without_1_EUR_200K'
+
+
+# In[3]:
+
 
 get_ipython().system('jupyter nbconvert --to script "PPO_Backtest.ipynb" --output "{OUTPUT_NAME}"')
 
 
-# In[ ]:
+# In[4]:
 
 
 from stable_baselines3 import DQN, PPO, A2C
@@ -36,7 +43,6 @@ import os
 import matplotlib.pyplot as plt
 from collections import Counter
 
-MODEL_PATH = 'Without_1_EUR_200K'
 
 #TradingEnv = TradingEnv_withPortfolio
 TradingEnv = TradingEnv_withoutPortfolio
@@ -128,7 +134,7 @@ def run_ppo_backtest_v1():
     plt.bar(actions, counts, tick_label=actions)
     plt.xlabel("Action")
     plt.ylabel("Frequency")
-    plt.title("PPO Agent Action Distribution")
+    plt.title("PPO_v{VERSION} Agent Action Distribution")
     plt.grid(axis='y')
     plt.tight_layout()
     plt.show()
