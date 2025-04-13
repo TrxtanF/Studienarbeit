@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-# In[9]:
+# In[34]:
 
 
 import os
@@ -20,13 +20,22 @@ print("Updated Python path:", sys.path)  # Debugging check
 VERSION = 4
 OUTPUT_NAME = f"PPO_Backtest_v{VERSION}"
 
-MODEL_PATH = 'Without_Custom_Deep_1_EUR_200K'
+if VERSION == 1:
+    MODEL_PATH = 'Without_1_EUR_200K'
+elif VERSION == 2:
+    MODEL_PATH = 'Without_Optuna_1_EUR_200K'
+elif VERSION == 3:
+    MODEL_PATH = 'Without_Custom_Small_1_EUR_200K'
+elif VERSION == 4:
+    MODEL_PATH = 'Without_Custom_Deep_1_EUR_200K'
+else:
+    raise Exception("Fehlerhafte Version")
 
 
-# In[11]:
+# In[36]:
 
 
-get_ipython().system('jupyter nbconvert --to script "PPO_Backtest.ipynb" --output "{OUTPUT_NAME}"')
+#get_ipython().system('jupyter nbconvert --to script "PPO_Backtest.ipynb" --output "{OUTPUT_NAME}"')
 
 
 # In[ ]:
@@ -134,7 +143,7 @@ def run_ppo_backtest_v4():
     plt.bar(actions, counts, tick_label=actions)
     plt.xlabel("Action")
     plt.ylabel("Frequency")
-    plt.title("PPO_v{VERSION} Agent Action Distribution")
+    plt.title(f"PPO_v{VERSION} Agent Action Distribution")
     plt.grid(axis='y')
     plt.tight_layout()
     plt.show()
