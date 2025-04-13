@@ -15,20 +15,31 @@ print("Updated Python path:", sys.path)  # Debugging check
 
 
 
-# In[ ]:
+
+# In[22]:
 
 
 from stable_baselines3 import DQN
 import torch
 import random
-from Environment.environment import TradingEnv
+from Environment.environment_withPortfolio import TradingEnv_withPortfolio
+from Environment.environment_withoutPortfolio import TradingEnv_withoutPortfolio
 import pandas as pd
 import numpy as np
 import os
 from collections import Counter
 import matplotlib.pyplot as plt
 
-def run_dqn_backtest():
+MODEL_NAME = 'DQN_optuna3_10K_timesteps'
+
+TradingEnv = TradingEnv_withPortfolio
+#TradingEnv = TradingEnv_withoutPortfolio
+
+def run_dqn_backtest_v1():
+#def run_dqn_backtest_v2():
+#def run_dqn_backtest_v3():
+#def run_dqn_backtest_v4():
+
 
     # === Setup ===
     SEED = 42
@@ -47,7 +58,7 @@ def run_dqn_backtest():
 
     test_data_path = os.path.join(BASE_DIR, '..', '..', 'Transform_data', 'stand_data', '2025-2024_stand_data.csv')
     scaler_path = os.path.join(BASE_DIR, '..', '..', 'Transform_data', 'scaler.pkl')
-    model_path = os.path.join(BASE_DIR, '..', '..', 'Agents', 'DQN', '!!!dqn_trading_model_1euro')
+    model_path = os.path.join(BASE_DIR, '..', '..', 'Agents', 'DQN', MODEL_NAME)
 
     # === Daten laden ===
     test_data = pd.read_csv(test_data_path)
@@ -70,7 +81,7 @@ def run_dqn_backtest():
     # === Environment vorbereiten ===
     test_env = TradingEnv(
         data=test_data,
-        initial_cash=1,
+        initial_cash=10000,
         window_size=336,
         scaler_path=scaler_path,
         default_seed=SEED
@@ -112,6 +123,7 @@ def run_dqn_backtest():
     plt.tight_layout()
     plt.show()
 
+    test_env.render(mode='human')
     return {
         "portfolio": portfolio_series,
         "actions": action_list
@@ -120,10 +132,10 @@ def run_dqn_backtest():
 
 
 
-# In[17]:
+# In[23]:
 
 
-dqn_result = run_dqn_backtest()
+dqn_result = run_dqn_backtest_v1()
 print(dqn_result["portfolio"].index[:5])
 
 
@@ -228,7 +240,7 @@ def compute_backtest_metrics(portfolio_values, risk_free_rate=0.0, periods_per_y
         "loss_rate": loss_rate
     }
 
-result = run_dqn_backtest()
+result = run_dqn_backtest_v1()
 portfolio = result["portfolio"]
 metrics = compute_backtest_metrics(portfolio)
 
