@@ -16,9 +16,9 @@ print("Updated Python path:", sys.path)  # Debugging check
 # In[27]:
 
 
-from Environment.environment import TradingEnv
+from Environment.environment_withPortfolio import TradingEnv_withPortfolio
 
-
+TradingEnv = TradingEnv_withPortfolio
 # In[28]:
 
 
