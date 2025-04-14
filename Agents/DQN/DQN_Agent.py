@@ -1,13 +1,25 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-# In[10]:
+# In[24]:
 
 
-get_ipython().run_line_magic('run', '../../Environment/environment.ipynb')
+import os
+import sys
+
+# Move up to the correct project root
+project_root = os.path.abspath(os.path.join(os.getcwd(), "../.."))
+sys.path.append(project_root)
+
+print("Updated Python path:", sys.path)  # Debugging check
+
+# In[27]:
 
 
-# In[11]:
+from Environment.environment_withPortfolio import TradingEnv_withPortfolio
+
+TradingEnv = TradingEnv_withPortfolio
+# In[28]:
 
 
 import optuna
@@ -19,7 +31,28 @@ from stable_baselines3.common.vec_env import DummyVecEnv
 from collections import Counter
 
 
-# In[12]:
+# # Set paths for data so that other notebooks can import functions without problems
+
+# In[29]:
+
+
+# Get the current working directory of the notebook
+
+def get_base_dir():
+    try:
+        return os.path.dirname(os.path.abspath(__file__))  # For .py files
+    except NameError:
+        return os.getcwd()
+
+BASE_DIR = get_base_dir()
+
+# Paths to your data and scaler
+train_data_path = os.path.join(BASE_DIR, '../../Transform_data/stand_data/2023-2018_stand_data.csv')
+test_data_path = os.path.join(BASE_DIR, '../../Transform_data/stand_data/2025-2024_stand_data.csv')
+scaler_path = os.path.join(BASE_DIR, '../../Transform_data/scaler.pkl')
+
+
+# In[30]:
 
 
 seed = 42
@@ -27,23 +60,23 @@ SEED  = seed % (2**32 - 1)
 print(f"SEED: {SEED}")
 
 
-# In[13]:
+# In[31]:
 
 
 # -------------------------------
 # CSV Daten einlesen
 # -------------------------------
-train_data = pd.read_csv("../../Transform_data/stand_data/2023-2018_stand_data.csv")
+train_data = pd.read_csv(train_data_path)
 train_data.drop('datetime', axis=1, inplace=True)
 
-test_data = pd.read_csv("../../Transform_data/stand_data/2025-2024_stand_data.csv")
+test_data = pd.read_csv(test_data_path)
 test_data.drop('datetime', axis=1, inplace=True)
 
 if train_data is not None and test_data is not None:
     print("Daten erfolgreich eingelesen")
 
 
-# In[14]:
+# In[32]:
 
 
 # Für Hyperparameter-Tuning nutzen wir test_data als Validierungsdatensatz.
@@ -80,7 +113,7 @@ def evaluate_agent(model, env, n_eval_episodes=5):
     return np.mean(episode_rewards)
 
 
-# In[15]:
+# In[33]:
 
 
 # -------------------------------
@@ -97,7 +130,7 @@ def objective(trial):
         data=train_data,
         initial_cash=10_000,
         window_size=336,
-        scaler_path="../../Transform_data/scaler.pkl",
+        scaler_path=scaler_path,
         default_seed=SEED
     )])
 
@@ -106,9 +139,10 @@ def objective(trial):
         data=valid_data,
         initial_cash=10_000,
         window_size=336,
-        scaler_path="../../Transform_data/scaler.pkl",
+        scaler_path=scaler_path,
         default_seed=SEED
     )])
+
 
     # Initialize the DQN model with sampled hyperparameters
     model = DQN(
@@ -133,12 +167,12 @@ def objective(trial):
 # In[ ]:
 
 
-study = optuna.create_study(direction="maximize")
-study.optimize(objective, n_trials=50)
-print("Best hyperparameters:", study.best_trial.params)
+# study = optuna.create_study(direction="maximize")
+# study.optimize(objective, n_trials=50)
+# print("Best hyperparameters:", study.best_trial.params)
 
 
-# In[18]:
+# In[34]:
 
 
 # -------------------------------
@@ -148,7 +182,7 @@ env = TradingEnv(
     data=train_data,
     initial_cash=10_000,
     window_size=336,
-    scaler_path="../../Transform_data/scaler.pkl",
+    scaler_path=scaler_path,
     default_seed=SEED
 )
 
@@ -156,7 +190,7 @@ if env is not None:
     print("Environment created successfully")
 
 
-# In[20]:
+# In[35]:
 
 
 # -------------------------------
@@ -167,14 +201,14 @@ model = DQN(
     env,
     verbose=1,
     seed=SEED,
-    buffer_size=500_000,
+    buffer_size=50_000,
     learning_rate=0.0008676988081645593,
     gamma=0.9567540210286709,
     batch_size=256
 )
 
 
-# In[21]:
+# In[ ]:
 
 
 # -------------------------------
@@ -186,10 +220,10 @@ model.learn(
 )
 
 # Speichere das trainierte Modell
-model.save("dqn_trading_model")
+model.save("model_without_buffer", exclude=["replay_buffer"])
 
 
-# In[22]:
+# In[37]:
 
 
 # -------------------------------
@@ -222,7 +256,7 @@ training_env.render(mode='human')
 print(action_list)
 
 
-# In[ ]:
+# In[38]:
 
 
 # -------------------------------
@@ -241,7 +275,7 @@ plt.grid(axis='y')
 plt.show()
 
 
-# In[ ]:
+# In[15]:
 
 
 # -------------------------------
@@ -251,7 +285,7 @@ test_env = TradingEnv(
     data=test_data,
     initial_cash=10_000,
     window_size=336,
-    scaler_path="../../Transform_data/scaler.pkl",
+    scaler_path=scaler_path,
     default_seed=SEED
 )
 
@@ -273,7 +307,7 @@ test_env.render(mode='human')
 print(action_list)
 
 
-# In[ ]:
+# In[16]:
 
 
 # -------------------------------
@@ -290,4 +324,119 @@ plt.ylabel("Frequency")
 plt.title("Agent Action Distribution")
 plt.grid(axis='y')
 plt.show()
+
+
+# In[40]:
+
+
+import numpy as np
+
+def compute_sharpe_ratio(portfolio_values, risk_free_rate=0.0, periods_per_year=8760):
+    """
+    Compute the Sharpe Ratio using the portfolio returns.
+
+    Parameters:
+    - portfolio_values: List or array of portfolio values over time.
+    - risk_free_rate: Annual risk-free rate (default: 0).
+    - periods_per_year: Number of periods in one year (default: 8760 for hourly data).
+
+    Returns:
+    - Sharpe ratio (annualized).
+    """
+    portfolio_values = np.array(portfolio_values)
+    # Calculate period-to-period returns
+    returns = np.diff(portfolio_values) / portfolio_values[:-1]
+    # Calculate excess returns over the period risk-free rate
+    excess_returns = returns - risk_free_rate / periods_per_year
+    # Annualize the Sharpe Ratio
+    sharpe_ratio = np.mean(excess_returns) / np.std(excess_returns) * np.sqrt(periods_per_year)
+    return sharpe_ratio
+
+def compute_max_drawdown(portfolio_values):
+    """
+    Compute the Maximum Drawdown from the portfolio value history.
+
+    Parameters:
+    - portfolio_values: List or array of portfolio values over time.
+
+    Returns:
+    - Maximum drawdown as a negative number (e.g., -0.2 means a 20% drawdown).
+    """
+    portfolio_values = np.array(portfolio_values)
+    cumulative_max = np.maximum.accumulate(portfolio_values)
+    drawdowns = (portfolio_values - cumulative_max) / cumulative_max
+    max_drawdown = np.min(drawdowns)
+    return max_drawdown
+
+def compute_annualized_return(portfolio_values, periods_per_year=8760):
+    """
+    Compute the annualized return (CAGR) based on the portfolio value history.
+
+    Parameters:
+    - portfolio_values: List or array of portfolio values over time.
+    - periods_per_year: Number of periods in one year.
+
+    Returns:
+    - Annualized return as a decimal (e.g., 0.12 for 12% per year).
+    """
+    portfolio_values = np.array(portfolio_values)
+    total_periods = len(portfolio_values)
+    total_return = portfolio_values[-1] / portfolio_values[0]
+    annualized_return = total_return**(periods_per_year / total_periods) - 1
+    return annualized_return
+
+def compute_win_loss_rate(portfolio_values):
+    """
+    Compute the win-loss rate based on the period-to-period returns.
+
+    Parameters:
+    - portfolio_values: List or array of portfolio values over time.
+
+    Returns:
+    - A tuple (win_rate, loss_rate) where each value is between 0 and 1.
+    """
+    portfolio_values = np.array(portfolio_values)
+    returns = np.diff(portfolio_values) / portfolio_values[:-1]
+    wins = np.sum(returns > 0)
+    losses = np.sum(returns <= 0)
+    win_rate = wins / (wins + losses) if (wins + losses) > 0 else 0
+    loss_rate = 1 - win_rate
+    return win_rate, loss_rate
+
+def compute_backtest_metrics(portfolio_values, risk_free_rate=0.0, periods_per_year=8760):
+    portfolio = pd.Series(portfolio_values)
+    returns = portfolio.pct_change().dropna()
+
+    final_portfolio_value = portfolio.iloc[-1]
+    profit = final_portfolio_value - portfolio.iloc[0]
+
+    annualized_return = (final_portfolio_value / portfolio.iloc[0]) ** (periods_per_year / len(portfolio)) - 1
+    sharpe_ratio = (returns.mean() / returns.std()) * np.sqrt(periods_per_year) if returns.std() != 0 else np.nan
+    max_drawdown = (portfolio / portfolio.cummax() - 1).min()
+
+    win_rate = (returns > 0).mean()
+    loss_rate = (returns < 0).mean()
+
+    return {
+        "final_portfolio_value": final_portfolio_value,
+        "profit": profit,
+        "annualized_return": annualized_return,
+        "sharpe_ratio": sharpe_ratio,
+        "max_drawdown": max_drawdown,
+        "win_rate": win_rate,
+        "loss_rate": loss_rate
+    }
+
+# Example usage with your environment's portfolio history:
+# Assuming you have a TradingEnv instance named 'test_env' that has completed an episode:
+metrics = compute_backtest_metrics(test_env.portfolio_value_history, risk_free_rate=0.0, periods_per_year=8760)
+print("Backtesting Metrics:")
+for key, value in metrics.items():
+    print(f"{key}: {value:.4f}")
+
+
+# In[ ]:
+
+
+
 
