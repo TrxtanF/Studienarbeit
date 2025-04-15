@@ -17,7 +17,7 @@ df['date'] = pd.to_datetime(df['date'], format=DATE_FORMAT, errors='coerce')
 df = df.dropna(subset=['date']).sort_values('date').set_index('date')
 
 # === Momentum-Berechnung ===
-MOM_WINDOW = 24  # z.B. 24 Stunden
+MOM_WINDOW = 96  
 df['momentum'] = df['close'].pct_change(periods=MOM_WINDOW)
 
 # === Signal generieren ===

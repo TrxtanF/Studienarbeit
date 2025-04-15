@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-# In[1]:
+# In[25]:
 
 
 import os
@@ -15,8 +15,7 @@ print("Updated Python path:", sys.path)  # Debugging check
 
 
 
-
-# In[22]:
+# In[78]:
 
 
 from stable_baselines3 import DQN
@@ -30,15 +29,16 @@ import os
 from collections import Counter
 import matplotlib.pyplot as plt
 
-MODEL_NAME = 'DQN_optuna3_10K_timesteps'
+MODEL_NAME = 'DQN_final_verglich'
 
-TradingEnv = TradingEnv_withPortfolio
-#TradingEnv = TradingEnv_withoutPortfolio
+#TradingEnv = TradingEnv_withPortfolio
+TradingEnv = TradingEnv_withoutPortfolio
 
-def run_dqn_backtest_v1():
+#def run_dqn_backtest_v1():
 #def run_dqn_backtest_v2():
 #def run_dqn_backtest_v3():
 #def run_dqn_backtest_v4():
+def run_dqn_backtest_v5():
 
 
     # === Setup ===
@@ -81,8 +81,8 @@ def run_dqn_backtest_v1():
     # === Environment vorbereiten ===
     test_env = TradingEnv(
         data=test_data,
-        initial_cash=10000,
-        window_size=336,
+        initial_cash=1,
+        window_size=168,
         scaler_path=scaler_path,
         default_seed=SEED
     )
@@ -132,10 +132,10 @@ def run_dqn_backtest_v1():
 
 
 
-# In[23]:
+# In[79]:
 
 
-dqn_result = run_dqn_backtest_v1()
+dqn_result = run_dqn_backtest_v5()
 print(dqn_result["portfolio"].index[:5])
 
 
@@ -240,7 +240,7 @@ def compute_backtest_metrics(portfolio_values, risk_free_rate=0.0, periods_per_y
         "loss_rate": loss_rate
     }
 
-result = run_dqn_backtest_v1()
+result = run_dqn_backtest_v5()
 portfolio = result["portfolio"]
 metrics = compute_backtest_metrics(portfolio)
 

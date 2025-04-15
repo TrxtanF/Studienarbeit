@@ -8,8 +8,8 @@ import os
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 CSV_PATH = os.path.join(BASE_DIR, "..", "..", "Transform_data", "raw_data", "2025-2024_BTC-USD_Data_1h.csv")
 
-SHORT_WINDOW = 24    # 24 Stunden MA
-LONG_WINDOW = 96     # 96 Stunden MA
+SHORT_WINDOW = 24   # 24 Stunden MA
+LONG_WINDOW = 96   # 96 Stunden MA
 INITIAL_CAPITAL = 1
 DATE_FORMAT = "%d.%m.%Y %H:%M"
 

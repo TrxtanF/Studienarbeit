@@ -16,7 +16,7 @@ df['date'] = pd.to_datetime(df['date'], format=DATE_FORMAT, errors='coerce')
 df = df.dropna(subset=['date']).sort_values('date').set_index('date')
 
 # === Bollinger Bands Berechnung ===
-WINDOW = 20
+WINDOW = 24
 df['sma'] = df['close'].rolling(window=WINDOW).mean()
 df['std'] = df['close'].rolling(window=WINDOW).std()
 df['upper_band'] = df['sma'] + 2 * df['std']
