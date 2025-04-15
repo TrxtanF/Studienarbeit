@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-# In[ ]:
+# In[26]:
 
 
 import os
@@ -14,11 +14,34 @@ sys.path.append(project_root)
 print("Updated Python path:", sys.path)  # Debugging check
 
 
+# In[ ]:
+
+
+VERSION = 2
+OUTPUT_NAME = f"PPO_Backtest_v{VERSION}"
+
+if VERSION == 1:
+    MODEL_PATH = 'Without_1_EUR_200K'
+elif VERSION == 2:
+    MODEL_PATH = 'Without_Optuna_1_EUR_200K'
+elif VERSION == 3:
+    MODEL_PATH = 'Without_Custom_Small_1_EUR_200K'
+elif VERSION == 4:
+    MODEL_PATH = 'Without_Custom_Deep_1_EUR_200K'
+else:
+    raise Exception("Fehlerhafte Version")
+
+
+# In[28]:
+
+
+#get_ipython().system('jupyter nbconvert --to script "PPO_Backtest.ipynb" --output "{OUTPUT_NAME}"')
+
 
 # In[ ]:
 
 
-from stable_baselines3 import PPO
+from stable_baselines3 import DQN, PPO, A2C
 import torch
 import random
 from Environment.environment_withPortfolio import TradingEnv_withPortfolio
@@ -29,14 +52,17 @@ import os
 import matplotlib.pyplot as plt
 from collections import Counter
 
+
+#TradingEnv = TradingEnv_withPortfolio
+TradingEnv = TradingEnv_withoutPortfolio
+
+
 #def run_ppo_backtest_v1():
 def run_ppo_backtest_v2():
 #def run_ppo_backtest_v3():
 #def run_ppo_backtest_v4():
 
-    #TradingEnv = TradingEnv_withPortfolio
-    TradingEnv = TradingEnv_withoutPortfolio
-
+    
     # === Setup ===
     SEED = 42
     random.seed(SEED)
@@ -57,7 +83,7 @@ def run_ppo_backtest_v2():
 
 
     ##### Hier muss der Pfad zu der korrekt trainierten Datei führen ###################
-    model_path = os.path.join(BASE_DIR, '..', '..', 'Agents', 'PPO', 'Without_Custom_Deep_1_EUR_200K') 
+    model_path = os.path.join(BASE_DIR, '..', '..', 'Agents', 'PPO', MODEL_PATH) 
 
     # === Daten laden ===
     test_data = pd.read_csv(test_data_path)
@@ -117,15 +143,15 @@ def run_ppo_backtest_v2():
     plt.bar(actions, counts, tick_label=actions)
     plt.xlabel("Action")
     plt.ylabel("Frequency")
-    plt.title("DQN Agent Action Distribution")
+    plt.title(f"PPO_v{VERSION} Agent Action Distribution")
     plt.grid(axis='y')
     plt.tight_layout()
     plt.show()
+
+    
 
     return {
         "portfolio": portfolio_series,
         "actions": action_list
     }
-
-
 

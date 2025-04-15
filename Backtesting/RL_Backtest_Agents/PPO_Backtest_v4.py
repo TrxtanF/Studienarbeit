@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-# In[ ]:
+# In[34]:
 
 
 import os
@@ -17,7 +17,7 @@ print("Updated Python path:", sys.path)  # Debugging check
 # In[ ]:
 
 
-VERSION = 1
+VERSION = 4
 OUTPUT_NAME = f"PPO_Backtest_v{VERSION}"
 
 if VERSION == 1:
@@ -32,7 +32,7 @@ else:
     raise Exception("Fehlerhafte Version")
 
 
-# In[ ]:
+# In[36]:
 
 
 #get_ipython().system('jupyter nbconvert --to script "PPO_Backtest.ipynb" --output "{OUTPUT_NAME}"')
@@ -57,10 +57,10 @@ from collections import Counter
 TradingEnv = TradingEnv_withoutPortfolio
 
 
-def run_ppo_backtest_v1():
+#def run_ppo_backtest_v1():
 #def run_ppo_backtest_v2():
 #def run_ppo_backtest_v3():
-#def run_ppo_backtest_v4():
+def run_ppo_backtest_v4():
 
     
     # === Setup ===

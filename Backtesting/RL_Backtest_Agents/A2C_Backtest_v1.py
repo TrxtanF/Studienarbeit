@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-# In[ ]:
+# In[1]:
 
 
 import os
@@ -18,16 +18,16 @@ print("Updated Python path:", sys.path)  # Debugging check
 
 
 VERSION = 1
-OUTPUT_NAME = f"PPO_Backtest_v{VERSION}"
+OUTPUT_NAME = f"A2C_Backtest_v{VERSION}"
 
 if VERSION == 1:
-    MODEL_PATH = 'Without_1_EUR_200K'
+    MODEL_PATH = 'a2c_trading_model'
 elif VERSION == 2:
-    MODEL_PATH = 'Without_Optuna_1_EUR_200K'
+    MODEL_PATH = ''
 elif VERSION == 3:
-    MODEL_PATH = 'Without_Custom_Small_1_EUR_200K'
+    MODEL_PATH = ''
 elif VERSION == 4:
-    MODEL_PATH = 'Without_Custom_Deep_1_EUR_200K'
+    MODEL_PATH = ''
 else:
     raise Exception("Fehlerhafte Version")
 
@@ -35,17 +35,17 @@ else:
 # In[ ]:
 
 
-#get_ipython().system('jupyter nbconvert --to script "PPO_Backtest.ipynb" --output "{OUTPUT_NAME}"')
+#get_ipython().system('jupyter nbconvert --to script "A2C_Backtest.ipynb" --output "{OUTPUT_NAME}"')
 
 
 # In[ ]:
 
 
-from stable_baselines3 import DQN, PPO, A2C
+from stable_baselines3 import DQN, A2C, PPO
 import torch
 import random
-from Environment.environment_withPortfolio import TradingEnv_withPortfolio
 from Environment.environment_withoutPortfolio import TradingEnv_withoutPortfolio
+from Environment.environment_withPortfolio import TradingEnv_withPortfolio
 import pandas as pd
 import numpy as np
 import os
@@ -53,15 +53,13 @@ import matplotlib.pyplot as plt
 from collections import Counter
 
 
-#TradingEnv = TradingEnv_withPortfolio
-TradingEnv = TradingEnv_withoutPortfolio
+TradingEnv = TradingEnv_withPortfolio
+#TradingEnv = TradingEnv_withoutPortfolio
 
-
-def run_ppo_backtest_v1():
-#def run_ppo_backtest_v2():
-#def run_ppo_backtest_v3():
-#def run_ppo_backtest_v4():
-
+def run_a2c_backtest_v1():
+#def run_a2c_backtest_v2():
+#def run_a2c_backtest_v3():
+#def run_a2c_backtest_v4():
     
     # === Setup ===
     SEED = 42
@@ -83,7 +81,7 @@ def run_ppo_backtest_v1():
 
 
     ##### Hier muss der Pfad zu der korrekt trainierten Datei führen ###################
-    model_path = os.path.join(BASE_DIR, '..', '..', 'Agents', 'PPO', MODEL_PATH) 
+    model_path = os.path.join(BASE_DIR, '..', '..', 'Agents', 'A2C', MODEL_PATH) 
 
     # === Daten laden ===
     test_data = pd.read_csv(test_data_path)
@@ -113,7 +111,7 @@ def run_ppo_backtest_v1():
     )
 
     # === Modell laden ===
-    model = PPO.load(model_path)
+    model = A2C.load(model_path)
 
     # === Episode ausführen ===
     reset_result = test_env.reset(seed=SEED)
@@ -143,12 +141,10 @@ def run_ppo_backtest_v1():
     plt.bar(actions, counts, tick_label=actions)
     plt.xlabel("Action")
     plt.ylabel("Frequency")
-    plt.title(f"PPO_v{VERSION} Agent Action Distribution")
+    plt.title(f"A2C_v{VERSION} Agent Action Distribution")
     plt.grid(axis='y')
     plt.tight_layout()
     plt.show()
-
-    
 
     return {
         "portfolio": portfolio_series,
