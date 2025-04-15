@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-# In[1]:
+# In[ ]:
 
 
 import os
@@ -21,13 +21,13 @@ VERSION = 1
 OUTPUT_NAME = f"A2C_Backtest_v{VERSION}"
 
 if VERSION == 1:
-    MODEL_PATH = 'a2c_trading_model'
+    MODEL_PATH = 'A2C_Model1_100K'
 elif VERSION == 2:
-    MODEL_PATH = ''
+    MODEL_PATH = 'A2C_Model2_100K'
 elif VERSION == 3:
-    MODEL_PATH = ''
+    MODEL_PATH = 'A2C_Model3_100K'
 elif VERSION == 4:
-    MODEL_PATH = ''
+    MODEL_PATH = 'A2C_Model4_100K'
 else:
     raise Exception("Fehlerhafte Version")
 
@@ -53,8 +53,8 @@ import matplotlib.pyplot as plt
 from collections import Counter
 
 
-TradingEnv = TradingEnv_withPortfolio
-#TradingEnv = TradingEnv_withoutPortfolio
+#TradingEnv = TradingEnv_withPortfolio
+TradingEnv = TradingEnv_withoutPortfolio
 
 def run_a2c_backtest_v1():
 #def run_a2c_backtest_v2():
